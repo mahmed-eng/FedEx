@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postman Clone - API Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #262626;
+            color: #e8e8e8;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #1e1e1e;
+            border-right: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #3a3a3a;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .sidebar-section {
+            padding: 10px 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .sidebar-section-title {
+            padding: 10px 15px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .sidebar-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-item:hover {
+            background: #2a2a2a;
+            border-left-color: #ff6b35;
+        }
+
+        .sidebar-item.active {
+            background: #323232;
+            border-left-color: #ff6b35;
+            color: #ff6b35;
+        }
+
+        .sidebar-method {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: #ff6b35;
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #3a3a3a;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-select {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 80px;
+            cursor: pointer;
+        }
+
+        .method-select:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .url-input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .btn-send {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-send:hover {
+            background: #ff5722;
+        }
+
+        .btn-send.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .request-section {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3a3a3a;
+            overflow: hidden;
+        }
+
+        .response-section {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3a3a3a;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+            background: #2d2d2d;
+            color: #999;
+        }
+
+        .tab:hover {
+            background: #323232;
+        }
+
+        .tab.active {
+            border-bottom-color: #ff6b35;
+            color: #ff6b35;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 20px;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .key-value-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .key-value-row input {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .key-value-row input:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .key-value-row .checkbox-input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background: #c41c3b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #a01630;
+        }
+
+        .btn-add {
+            background: #393939;
+            color: #ff6b35;
+            border: 1px solid #4a4a4a;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-add:hover {
+            background: #404040;
+        }
+
+        /* Authorization */
+        .auth-type-select {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 8px 10px;
+            border-radius: 3px;
+            font-size: 13px;
+            width: 100%;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .auth-type-select:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        /* Response */
+        .response-info {
+            display: flex;
+            gap: 20px;
+            padding: 10px 20px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3a3a3a;
+            font-size: 12px;
+        }
+
+        .response-stat {
+            display: flex;
+            gap: 5px;
+        }
+
+        .response-stat-label {
+            color: #999;
+        }
+
+        .response-stat-value {
+            color: #ff6b35;
+            font-weight: 600;
+        }
+
+        .response-success {
+            color: #5cbf60;
+        }
+
+        .response-error {
+            color: #c41c3b;
+        }
+
+        .response-body {
+            flex: 1;
+            overflow: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 15px 20px;
+        }
+
+        .response-body pre {
+            margin: 0;
+            color: #e8e8e8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4a4a4a;
+            border-top: 2px solid #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .textarea-input {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            width: 100%;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .textarea-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        .syntax-highlighted {
+            color: #e8e8e8;
+        }
+
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
+        .json-null { color: #569cd6; }
+
+        .history-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background: #2a2a2a;
+        }
+
+        .history-item.active {
+            border-left-color: #ff6b35;
+            background: #323232;
+        }
+
+        .history-method {
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .desc-area {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .proxy-settings {
+            background: #323232;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #4a4a4a;
+        }
+
+        .proxy-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .proxy-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .proxy-toggle label {
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .proxy-input {
+            width: 100%;
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .warning-banner {
+            background: #4a2a2a;
+            border-left: 3px solid #ff6b35;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            color: #ff9966;
+        }
+
+        .success-banner {
+            background: #2a4a2a;
+            border-left: 3px solid #5cbf60;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            color: #7fd87f;
+        }
+
+        @media (max-width: 1024px) {
+            .tabs-container {
+                grid-template-columns: 1fr;
+            }
+
+            .request-section {
+                border-right: none;
+                border-bottom: 1px solid #3a3a3a;
+            }
+        }
+
+        .copy-btn {
+            background: #393939;
+            border: 1px solid #4a4a4a;
+            color: #e8e8e8;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #404040;
+            border-color: #ff6b35;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">📮 Postman Clone</div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Collections</div>
+                <div class="sidebar-item" onclick="showCollections()">
+                    <span>My Collection</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">History</div>
+                <div id="historyContainer">
+                    <div class="sidebar-item" style="color: #666; cursor: default;">No history yet</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Environments</div>
+                <div class="sidebar-item">
+                    <span>Default</span>
+                </div>
+                <div class="sidebar-item">
+                    <span>+ Add Environment</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <select class="method-select" id="methodSelect">
+                    <option value="GET">GET</option>
+                    <option value="POST" selected>POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="HEAD">HEAD</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                </select>
+                <div class="url-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="url-input" 
+                        id="urlInput" 
+                        placeholder="Enter request URL"
+                        value="https://apis-sandbox.fedex.com/oauth/token"
+                    >
+                </div>
+                <button class="btn-send" id="sendBtn" onclick="sendRequest()">Send</button>
+            </div>
+
+            <!-- Proxy Settings Panel -->
+            <div style="background: #2d2d2d; border-bottom: 1px solid #3a3a3a; padding: 10px 20px;">
+                <div class="proxy-settings">
+                    <div class="proxy-toggle">
+                        <input type="checkbox" id="enableProxy" onchange="toggleProxy()">
+                        <label for="enableProxy">Use CORS Proxy (CORS Anywhere)</label>
+                    </div>
+                    <input 
+                        type="text" 
+                        class="proxy-input" 
+                        id="proxyUrl" 
+                        placeholder="e.g., https://cors-anywhere.herokuapp.com/"
+                        style="display: none;"
+                        value="https://cors-anywhere.herokuapp.com/"
+                    >
+                    <div style="font-size: 11px; color: #999; margin-top: 5px; display: none;" id="proxyInfo">
+                        ℹ️ <strong>First time setup:</strong> Visit <a href="https://cors-anywhere.herokuapp.com/" target="_blank" style="color: #ff6b35; text-decoration: underline;">https://cors-anywhere.herokuapp.com/</a> and click "Request temporary access to the demo server" (24-hour access). Required headers are automatically added.
+                    </div>
+                    <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                        💡 For testing cross-origin APIs that block CORS requests
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Container -->
+            <div class="tabs-container">
+                <!-- Request Section -->
+                <div class="request-section">
+                    <div class="tabs" id="requestTabs">
+                        <div class="tab active" onclick="switchRequestTab(this, 'params')">Params</div>
+                        <div class="tab" onclick="switchRequestTab(this, 'authorization')">Authorization</div>
+                        <div class="tab" onclick="switchRequestTab(this, 'headers')">Headers</div>
+                        <div class="tab" onclick="switchRequestTab(this, 'body')">Body</div>
+                        <div class="tab" onclick="switchRequestTab(this, 'test')">Tests</div>
+                    </div>
+
+                    <div class="content-area">
+                        <!-- Params Tab -->
+                        <div class="tab-content active" id="params">
+                            <div class="form-group">
+                                <label>Query Parameters</label>
+                            </div>
+                            <div id="paramsContainer"></div>
+                            <button class="btn-add" onclick="addParam()">+ Add Param</button>
+                        </div>
+
+                        <!-- Authorization Tab -->
+                        <div class="tab-content" id="authorization">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="auth-type-select" id="authType" onchange="updateAuthUI()">
+                                    <option value="none">No Auth</option>
+                                    <option value="basic">Basic Auth</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="apikey">API Key</option>
+                                    <option value="oauth2">OAuth 2.0</option>
+                                </select>
+                            </div>
+                            <div id="authUI"></div>
+                        </div>
+
+                        <!-- Headers Tab -->
+                        <div class="tab-content" id="headers">
+                            <div class="form-group">
+                                <label>Headers</label>
+                            </div>
+                            <div id="headersContainer"></div>
+                            <button class="btn-add" onclick="addHeader()">+ Add Header</button>
+                        </div>
+
+                        <!-- Body Tab -->
+                        <div class="tab-content" id="body">
+                            <div class="form-group">
+                                <label>Body Type</label>
+                                <select class="auth-type-select" id="bodyType" onchange="updateBodyUI()">
+                                    <option value="none">None</option>
+                                    <option value="form-data">form-data</option>
+                                    <option value="urlencoded">x-www-form-urlencoded</option>
+                                    <option value="raw">raw</option>
+                                    <option value="binary">binary</option>
+                                </select>
+                            </div>
+                            <div id="bodyUI"></div>
+                        </div>
+
+                        <!-- Tests Tab -->
+                        <div class="tab-content" id="test">
+                            <div class="form-group">
+                                <label>Test Scripts</label>
+                                <textarea class="textarea-input" id="testScript" placeholder='// Example:
+// pm.test("Status code is 200", function () {
+//     pm.response.to.have.status(200);
+// });'></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Section -->
+                <div class="response-section">
+                    <div class="tabs" id="responseTabs">
+                        <div class="tab active" onclick="switchResponseTab(this, 'response-body')">Body</div>
+                        <div class="tab" onclick="switchResponseTab(this, 'response-headers')">Headers</div>
+                        <div class="tab" onclick="switchResponseTab(this, 'test-results')">Tests</div>
+                    </div>
+
+                    <div id="responseInfo" class="response-info" style="display: none;">
+                        <div class="response-stat">
+                            <span class="response-stat-label">Status:</span>
+                            <span class="response-stat-value" id="statusCode">-</span>
+                        </div>
+                        <div class="response-stat">
+                            <span class="response-stat-label">Time:</span>
+                            <span class="response-stat-value" id="responseTime">-</span>
+                        </div>
+                        <div class="response-stat">
+                            <span class="response-stat-label">Size:</span>
+                            <span class="response-stat-value" id="responseSize">-</span>
+                        </div>
+                        <button class="copy-btn" onclick="copyResponse()">Copy</button>
+                    </div>
+
+                    <div class="content-area" id="responseArea">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>Click Send to get a response</div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="response-body" style="display: none;">
+                        <div class="response-body" id="responseBody"></div>
+                    </div>
+
+                    <div class="tab-content" id="response-headers" style="display: none;">
+                        <div class="response-body" id="responseHeaders"></div>
+                    </div>
+
+                    <div class="tab-content" id="test-results" style="display: none;">
+                        <div class="response-body" id="testResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let requestState = {
+            method: 'POST',
+            url: 'https://apis-sandbox.fedex.com/oauth/token',
+            params: [],
+            headers: [
+                { key: 'Content-Type', value: 'application/x-www-form-urlencoded', enabled: true }
+            ],
+            body: {
+                type: 'urlencoded',
+                formData: [
+                    { key: 'grant_type', value: 'client_credentials', enabled: true },
+                    { key: 'client_id', value: 'i721e8f60698f141e5809dc5305cc31aac', enabled: true },
+                    { key: 'client_secret', value: 'b4344ccf419784b158d19ccdb4a0b35bf', enabled: true }
+                ],
+                raw: ''
+            },
+            auth: {
+                type: 'none'
+            }
+        };
+
+        let requestHistory = [];
+        let currentResponse = null;
+        let corsProxyEnabled = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderParams();
+            renderHeaders();
+            updateBodyUI();
+            updateAuthUI();
+        });
+
+        // Toggle CORS Proxy
+        function toggleProxy() {
+            corsProxyEnabled = document.getElementById('enableProxy').checked;
+            document.getElementById('proxyUrl').style.display = corsProxyEnabled ? 'block' : 'none';
+            document.getElementById('proxyInfo').style.display = corsProxyEnabled ? 'block' : 'none';
+        }
+
+        // Tab Switching
+        function switchRequestTab(tab, tabId) {
+            document.querySelectorAll('#requestTabs .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.request-section .tab-content').forEach(tc => tc.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function switchResponseTab(tab, tabId) {
+            document.querySelectorAll('#responseTabs .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.response-section .tab-content').forEach(tc => tc.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Params
+        function renderParams() {
+            const container = document.getElementById('paramsContainer');
+            container.innerHTML = '';
+            
+            requestState.params.forEach((param, index) => {
+                container.innerHTML += `
+                    <div class="key-value-row">
+                        <input type="checkbox" class="checkbox-input" ${param.enabled ? 'checked' : ''} onchange="updateParam(${index}, 'enabled', this.checked)">
+                        <input type="text" value="${param.key}" placeholder="Key" onchange="updateParam(${index}, 'key', this.value)">
+                        <input type="text" value="${param.value}" placeholder="Value" onchange="updateParam(${index}, 'value', this.value)">
+                        <button class="btn-delete" onclick="removeParam(${index})">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addParam() {
+            requestState.params.push({ key: '', value: '', enabled: true });
+            renderParams();
+        }
+
+        function updateParam(index, field, value) {
+            requestState.params[index][field] = value;
+        }
+
+        function removeParam(index) {
+            requestState.params.splice(index, 1);
+            renderParams();
+        }
+
+        // Headers
+        function renderHeaders() {
+            const container = document.getElementById('headersContainer');
+            container.innerHTML = '';
+            
+            requestState.headers.forEach((header, index) => {
+                container.innerHTML += `
+                    <div class="key-value-row">
+                        <input type="checkbox" class="checkbox-input" ${header.enabled ? 'checked' : ''} onchange="updateHeader(${index}, 'enabled', this.checked)">
+                        <input type="text" value="${header.key}" placeholder="Key" onchange="updateHeader(${index}, 'key', this.value)">
+                        <input type="text" value="${header.value}" placeholder="Value" onchange="updateHeader(${index}, 'value', this.value)">
+                        <button class="btn-delete" onclick="removeHeader(${index})">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addHeader() {
+            requestState.headers.push({ key: '', value: '', enabled: true });
+            renderHeaders();
+        }
+
+        function updateHeader(index, field, value) {
+            requestState.headers[index][field] = value;
+        }
+
+        function removeHeader(index) {
+            requestState.headers.splice(index, 1);
+            renderHeaders();
+        }
+
+        // Body
+        function updateBodyUI() {
+            const bodyType = document.getElementById('bodyType').value;
+            const bodyUI = document.getElementById('bodyUI');
+            requestState.body.type = bodyType;
+
+            if (bodyType === 'none') {
+                bodyUI.innerHTML = '<div class="form-group"><p style="color: #999;">No body</p></div>';
+            } else if (bodyType === 'form-data' || bodyType === 'urlencoded') {
+                let html = '<div class="form-group"><label>Form Data</label></div>';
+                requestState.body.formData.forEach((item, index) => {
+                    html += `
+                        <div class="key-value-row">
+                            <input type="checkbox" class="checkbox-input" ${item.enabled ? 'checked' : ''} onchange="updateFormData(${index}, 'enabled', this.checked)">
+                            <input type="text" value="${item.key}" placeholder="Key" onchange="updateFormData(${index}, 'key', this.value)">
+                            <input type="text" value="${item.value}" placeholder="Value" onchange="updateFormData(${index}, 'value', this.value)">
+                            <button class="btn-delete" onclick="removeFormData(${index})">Delete</button>
+                        </div>
+                    `;
+                });
+                html += '<button class="btn-add" onclick="addFormData()">+ Add Field</button>';
+                bodyUI.innerHTML = html;
+            } else if (bodyType === 'raw') {
+                bodyUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Raw Body</label>
+                        <textarea class="textarea-input" id="rawBody" onchange="updateRawBody(this.value)" placeholder="Enter raw data (JSON, XML, etc.)">${requestState.body.raw}</textarea>
+                    </div>
+                `;
+            } else if (bodyType === 'binary') {
+                bodyUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Binary Data</label>
+                        <input type="file" id="binaryFile" style="color: #e8e8e8;">
+                    </div>
+                `;
+            }
+        }
+
+        function updateFormData(index, field, value) {
+            requestState.body.formData[index][field] = value;
+        }
+
+        function removeFormData(index) {
+            requestState.body.formData.splice(index, 1);
+            updateBodyUI();
+        }
+
+        function addFormData() {
+            requestState.body.formData.push({ key: '', value: '', enabled: true });
+            updateBodyUI();
+        }
+
+        function updateRawBody(value) {
+            requestState.body.raw = value;
+        }
+
+        // Authorization
+        function updateAuthUI() {
+            const authType = document.getElementById('authType').value;
+            requestState.auth.type = authType;
+            const authUI = document.getElementById('authUI');
+
+            if (authType === 'none') {
+                authUI.innerHTML = '<p style="color: #999; margin-top: 10px;">No authentication</p>';
+            } else if (authType === 'basic') {
+                authUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="key-value-row" style="grid-column: 1/3; width: 100%;" id="basicUsername" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="key-value-row" style="grid-column: 1/3; width: 100%;" id="basicPassword" placeholder="Password">
+                    </div>
+                `;
+            } else if (authType === 'bearer') {
+                authUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Token</label>
+                        <input type="text" class="key-value-row" style="grid-column: 1/3; width: 100%;" id="bearerToken" placeholder="Enter your bearer token">
+                    </div>
+                `;
+            } else if (authType === 'apikey') {
+                authUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Key</label>
+                        <input type="text" class="key-value-row" style="grid-column: 1/3; width: 100%;" id="apiKey" placeholder="Key name">
+                    </div>
+                    <div class="form-group">
+                        <label>Value</label>
+                        <input type="text" class="key-value-row" style="grid-column: 1/3; width: 100%;" id="apiKeyValue" placeholder="Key value">
+                    </div>
+                `;
+            } else if (authType === 'oauth2') {
+                authUI.innerHTML = `
+                    <div class="form-group">
+                        <label>Grant Type</label>
+                        <select class="auth-type-select">
+                            <option>Client Credentials</option>
+                            <option>Authorization Code</option>
+                            <option>Implicit</option>
+                            <option>Password</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Token URL</label>
+                        <input type="text" class="key-value-row" style="grid-column: 1/3; width: 100%;" placeholder="https://...">
+                    </div>
+                `;
+            }
+        }
+
+        // Send Request
+        async function sendRequest() {
+            const url = document.getElementById('urlInput').value;
+            const method = document.getElementById('methodSelect').value;
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (!url.trim()) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            // Show loading state
+            sendBtn.classList.add('loading');
+            sendBtn.textContent = 'Sending...';
+
+            const startTime = performance.now();
+
+            try {
+                let finalUrl = url;
+                
+                // Apply CORS proxy if enabled
+                if (corsProxyEnabled) {
+                    const proxyUrl = document.getElementById('proxyUrl').value.trim();
+                    if (proxyUrl) {
+                        finalUrl = proxyUrl + url;
+                    }
+                }
+
+                const params = requestState.params.filter(p => p.enabled && p.key);
+                if (params.length > 0) {
+                    const queryString = new URLSearchParams(
+                        params.map(p => [p.key, p.value])
+                    ).toString();
+                    if (corsProxyEnabled) {
+                        finalUrl += (finalUrl.includes('?') ? '&' : '?') + queryString;
+                    } else {
+                        finalUrl += (url.includes('?') ? '&' : '?') + queryString;
+                    }
+                }
+
+                const options = {
+                    method: method,
+                    headers: {}
+                };
+
+                // Add headers
+                requestState.headers.forEach(header => {
+                    if (header.enabled && header.key) {
+                        options.headers[header.key] = header.value;
+                    }
+                });
+
+                // Add X-Requested-With header for CORS Anywhere compatibility
+                if (corsProxyEnabled) {
+                    options.headers['X-Requested-With'] = 'XMLHttpRequest';
+                }
+
+                // Add authorization
+                if (requestState.auth.type === 'bearer') {
+                    const token = document.getElementById('bearerToken')?.value;
+                    if (token) {
+                        options.headers['Authorization'] = 'Bearer ' + token;
+                    }
+                } else if (requestState.auth.type === 'basic') {
+                    const username = document.getElementById('basicUsername')?.value;
+                    const password = document.getElementById('basicPassword')?.value;
+                    if (username && password) {
+                        const encoded = btoa(username + ':' + password);
+                        options.headers['Authorization'] = 'Basic ' + encoded;
+                    }
+                } else if (requestState.auth.type === 'apikey') {
+                    const apiKey = document.getElementById('apiKey')?.value;
+                    const apiKeyValue = document.getElementById('apiKeyValue')?.value;
+                    if (apiKey && apiKeyValue) {
+                        options.headers[apiKey] = apiKeyValue;
+                    }
+                }
+
+                // Add body
+                if (method !== 'GET' && method !== 'HEAD' && requestState.body.type !== 'none') {
+                    if (requestState.body.type === 'urlencoded') {
+                        const formData = new URLSearchParams();
+                        requestState.body.formData.forEach(item => {
+                            if (item.enabled && item.key) {
+                                formData.append(item.key, item.value);
+                            }
+                        });
+                        options.body = formData;
+                    } else if (requestState.body.type === 'raw') {
+                        options.body = requestState.body.raw;
+                        if (!options.headers['Content-Type']) {
+                            options.headers['Content-Type'] = 'application/json';
+                        }
+                    }
+                }
+
+                const response = await fetch(finalUrl, options);
+                const endTime = performance.now();
+                const duration = (endTime - startTime).toFixed(2);
+
+                let responseText;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    responseText = JSON.stringify(data, null, 2);
+                } else {
+                    responseText = await response.text();
+                }
+
+                // Store response
+                currentResponse = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: responseText,
+                    headers: Object.fromEntries(response.headers),
+                    time: duration,
+                    size: new Blob([responseText]).size,
+                    corsProxyUsed: corsProxyEnabled
+                };
+
+                // Display response
+                displayResponse();
+
+                // Add to history
+                addToHistory(method, url);
+
+            } catch (error) {
+                let errorMsg = `❌ Error: ${error.message}\n\n`;
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    errorMsg += `⚠️ CORS Error Detected\n`;
+                    errorMsg += `=`.repeat(50) + `\n\n`;
+                    errorMsg += `SOLUTIONS:\n\n`;
+                    
+                    if (!corsProxyEnabled) {
+                        errorMsg += `1️⃣ USE CORS PROXY (Recommended):\n`;
+                        errorMsg += `   • Check the "Use CORS Proxy" checkbox above\n`;
+                        errorMsg += `   • First time? Visit: https://cors-anywhere.herokuapp.com/\n`;
+                        errorMsg += `   • Click "Request temporary access to the demo server"\n`;
+                        errorMsg += `   • You'll get 24-hour access\n`;
+                        errorMsg += `   • Then try your request again\n\n`;
+                    } else {
+                        errorMsg += `1️⃣ CORS PROXY ENABLED BUT FAILED:\n`;
+                        errorMsg += `   • Make sure you have temporary access:\n`;
+                        errorMsg += `     https://cors-anywhere.herokuapp.com/\n`;
+                        errorMsg += `   • Access expires after 24 hours\n`;
+                        errorMsg += `   • Try the access link again\n\n`;
+                    }
+                    
+                    errorMsg += `2️⃣ CHECK YOUR API:\n`;
+                    errorMsg += `   • Verify the URL is correct\n`;
+                    errorMsg += `   • Check if API is down or slow\n`;
+                    errorMsg += `   • Some APIs require authentication\n\n`;
+                    
+                    errorMsg += `3️⃣ BROWSER LIMITATION:\n`;
+                    errorMsg += `   • Browsers enforce CORS security\n`;
+                    errorMsg += `   • Real Postman is a desktop app (bypasses CORS)\n`;
+                    errorMsg += `   • This is a browser-based version\n`;
+                } else {
+                    errorMsg += error.stack;
+                }
+
+                currentResponse = {
+                    status: 0,
+                    statusText: 'Error',
+                    body: errorMsg,
+                    headers: {},
+                    time: '0',
+                    size: 0,
+                    corsProxyUsed: corsProxyEnabled
+                };
+                displayResponse();
+            } finally {
+                sendBtn.classList.remove('loading');
+                sendBtn.textContent = 'Send';
+            }
+        }
+
+        function displayResponse() {
+            const responseArea = document.getElementById('responseArea');
+            const responseInfo = document.getElementById('responseInfo');
+            
+            // Show response info
+            responseInfo.style.display = 'flex';
+            document.getElementById('statusCode').textContent = currentResponse.status || 'Error';
+            
+            const statusElement = document.getElementById('statusCode');
+            if (currentResponse.status === 0) {
+                statusElement.className = 'response-stat-value response-error';
+            } else {
+                statusElement.className = 'response-stat-value ' + 
+                    (currentResponse.status >= 200 && currentResponse.status < 300 ? 'response-success' : 'response-error');
+            }
+            
+            document.getElementById('responseTime').textContent = currentResponse.time + 'ms';
+            document.getElementById('responseSize').textContent = (currentResponse.size / 1024).toFixed(2) + ' KB';
+
+            // Show body with proxy info
+            let bodyContent = currentResponse.body;
+            if (currentResponse.corsProxyUsed) {
+                bodyContent = '📡 CORS Proxy Enabled\n' + '='.repeat(50) + '\n\n' + bodyContent;
+            }
+            document.getElementById('responseBody').textContent = bodyContent;
+
+            // Show headers
+            if (Object.keys(currentResponse.headers).length > 0) {
+                document.getElementById('responseHeaders').textContent = JSON.stringify(currentResponse.headers, null, 2);
+            } else {
+                document.getElementById('responseHeaders').textContent = '{}';
+            }
+
+            // Hide empty state and show tabs
+            responseArea.innerHTML = '';
+            
+            // Switch to response body tab
+            const responseTabs = document.querySelectorAll('#responseTabs .tab');
+            responseTabs.forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.response-section .tab-content').forEach(tc => tc.style.display = 'none');
+            responseTabs[0].classList.add('active');
+            document.getElementById('response-body').style.display = 'flex';
+        }
+
+        function copyResponse() {
+            if (currentResponse) {
+                navigator.clipboard.writeText(currentResponse.body);
+                alert('Response copied to clipboard!');
+            }
+        }
+
+        // History
+        function addToHistory(method, url) {
+            requestHistory.unshift({ method, url, time: new Date().toLocaleTimeString() });
+            if (requestHistory.length > 20) requestHistory.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            if (requestHistory.length === 0) {
+                container.innerHTML = '<div class="sidebar-item" style="color: #666; cursor: default;">No history yet</div>';
+                return;
+            }
+
+            container.innerHTML = requestHistory.map((item, index) => `
+                <div class="sidebar-item history-item" onclick="loadFromHistory(${index})">
+                    <span>
+                        <span class="history-method" style="color: #ff6b35;">${item.method}</span>
+                        ${item.url.substring(0, 25)}...
+                    </span>
+                    <span style="font-size: 10px; color: #666;">${item.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function loadFromHistory(index) {
+            const item = requestHistory[index];
+            document.getElementById('urlInput').value = item.url;
+            document.getElementById('methodSelect').value = item.method;
+        }
+
+        // Method select handler
+        document.getElementById('methodSelect').addEventListener('change', function(e) {
+            requestState.method = e.target.value;
+        });
+
+        // URL input handler
+        document.getElementById('urlInput').addEventListener('change', function(e) {
+            requestState.url = e.target.value;
+        });
+
+        // Enter key to send
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendRequest();
+            }
+        });
+    </script>
+</body>
+</html>
